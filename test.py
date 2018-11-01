@@ -3,7 +3,7 @@ import argparse
 from time import sleep
 import imageio
 from multiprocessing import Queue, Pool
-from scaler_producer2 import resize
+from scaler_producer import resize
 import threading
 from utils import INSTANCE
 

@@ -1,6 +1,6 @@
 # from producer import video_emitter
 import argparse
-from scaler_producer import resize
+from scaler_producer_old import resize
 from time import sleep
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
