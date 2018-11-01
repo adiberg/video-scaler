@@ -1,14 +1,10 @@
 import os
-
-os.environ["CLASSPATH"] = "C:/Uers/Adi/opencv"
-
 import cv2
 from json_tricks import loads
 from kafka import KafkaConsumer
 
 # output folder
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__)) + "/temp"
-# PROJECT_ROOT = os.environ.get("SCALER_OUTPUT_DIR", "/tmp")
+PROJECT_ROOT = os.environ.get("SCALER_OUTPUT_DIR", "/tmp")
 
 # ratio for scaling image
 RATIO = 0.5
@@ -50,9 +46,7 @@ def handle(frame_package):
     # save new image to disk
     file_name = "Frame%i.jpg" % frame_index
     directory = os.path.join(PROJECT_ROOT, video_id)
-    # os.makedirs(directory, exist_ok=True)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
     path = os.path.join(directory, file_name)
     # scipy.misc.imsave(path, image_array)
     cv2.imwrite(path, resized)
