@@ -1,18 +1,66 @@
 # from producer import video_emitter
 import argparse
-from scaler_producer import resize
 from time import sleep
+import imageio
+from multiprocessing import Queue, Pool
+from scaler_producer2 import resize
+import threading
+from utils import INSTANCE
 
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+NUM_WORKERS = 5
+
+
+def worker(video, instance_idx):
+    print(' emitting %s.....' % instance_idx)
+    reader = imageio.get_reader(video, 'ffmpeg')
+    metadata = reader.get_meta_data()
+
+    # threads = []
+    frame_idx = 0
+    for frame in reader:
+        msg = {"instance": "vid-instance%i" % instance_idx,
+               "frame_num": frame_idx,
+               "frame": frame}
+        # send message to service
+        resize(msg)
+        # thread = threading.Thread(target=resize(msg))
+        # thread.start()
+        # threads.append(thread)
+        if frame_idx % 10 == 0:
+            print("sent instance %d, frame %d to service" % (instance_idx, frame_idx))
+        frame_idx += 1
+
+    # for t in threads:
+    #     t.join()
+    video.release()
 
 
 def test():
-    (path, repeat_counter, seconds) = parse_options()
-    resize(path)
-    for i in range(1,repeat_counter):
+    (video_path, repeat_counter, seconds) = parse_options()
+    # Multiprocessing: Init input Queue and pool of workers
+    # input_q = Queue(maxsize=repeat_counter)
+    # pool = Pool(NUM_WORKERS, worker, (input_q))
+
+    threads = []
+    thread = threading.Thread(target=worker(video_path, 0))
+    thread.start()
+    threads.append(thread)
+
+    count_read_instance = 1
+    for i in range(1, repeat_counter):
         sleep(seconds)
         print("Sending video again")
-        resize(path)
+        thread = threading.Thread(target=worker(video_path, i))
+        thread.start()
+        threads.append(thread)
+        # input_q.put((video_path, i))
+        count_read_instance += 1
+
+        print("Read Instances reatio: %f.2" % (count_read_instance / repeat_counter))
+
+    # When everything done, release the capture
+    for t in threads:
+        t.join()
 
 
 def parse_options():
